@@ -22,7 +22,6 @@ class Settings(BaseSettings):
     client_x509_cert_url: Optional[str] = None
     email: Optional[str] = None
 
-
     class Config:
         env_file = ".env"
 

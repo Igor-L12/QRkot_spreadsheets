@@ -24,6 +24,7 @@ INFO = {
 # Получаем объект учётных данных
 cred = ServiceAccountCreds(scopes=SCOPES, **INFO)
 
+
 # Создаём экземпляр класса Aiogoogle
 async def get_service():
     async with Aiogoogle(service_account_creds=cred) as aiogoogle:
