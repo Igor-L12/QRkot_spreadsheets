@@ -1,3 +1,4 @@
+import copy
 from datetime import datetime as dt
 from operator import itemgetter
 
@@ -13,7 +14,6 @@ TABLE_HEADER = [
     ['Топ проектов по скорости закрытия'],
     ['Название проекта', 'Время сбора', 'Описание']
 ]
-
 SPREADSHEET_BODY_TEMPLATE = {
     'properties': {
         'title': '',
@@ -34,18 +34,21 @@ SPREADSHEET_BODY_TEMPLATE = {
     ],
 }
 SPREADSHEET_SIZE_ERROR_MESSAGE = (
-    "Недопустимый размер таблицы "
-    f"Число строк должно быть меньше {ROW_COUNT} "
-    f"Число столбцов должно быть меньше {COLUMN_COUNT}"
+    "Недопустимый размер таблицы! "
+    f"Число строк должно быть меньше {ROW_COUNT}. "
+    f"Число столбцов должно быть меньше {COLUMN_COUNT}. "
+    "Ваше число строк - {rows}. "
+    "Ваше число столбцов - {columns}. "
 )
 
 
-async def spreadsheets_create(wrapper_services: Aiogoogle,
-                              spreadsheet_body=None
-                              ) -> str:
+async def spreadsheets_create(
+        wrapper_services: Aiogoogle,
+        spreadsheet_body=None
+) -> str:
     """Функция создания документа с таблицами."""
     now_date_time = dt.now().strftime(FORMAT)
-    spreadsheet_body = SPREADSHEET_BODY_TEMPLATE.copy()
+    spreadsheet_body = copy.deepcopy(SPREADSHEET_BODY_TEMPLATE)
     spreadsheet_body['properties']['title'] = f'Отчет от {now_date_time}'
     service = await wrapper_services.discover('sheets', 'v4')
     response = await wrapper_services.as_service_account(
@@ -56,8 +59,10 @@ async def spreadsheets_create(wrapper_services: Aiogoogle,
     return spreadsheet_id, spreadsheet_url
 
 
-async def set_user_permissions(spreadsheet_id: str,
-                               wrapper_services: Aiogoogle) -> None:
+async def set_user_permissions(
+        spreadsheet_id: str,
+        wrapper_services: Aiogoogle
+) -> None:
     """Функция для предоставления прав доступа вашему личному аккаунту
     к созданному документу."""
     permissions_body = {'type': 'user',
@@ -78,7 +83,7 @@ async def spreadsheets_update_value(
 ) -> None:
     """Функция для записи данных, полученных из базы, в гугл-таблицу."""
     now_date_time = dt.now().strftime(FORMAT)
-    header = TABLE_HEADER.copy()
+    header = copy.deepcopy(TABLE_HEADER)
     header[0][1] = f'{now_date_time}'
     service = await wrapper_services.discover('sheets', 'v4')
     sorted_projects = sorted((({
@@ -93,7 +98,12 @@ async def spreadsheets_update_value(
     rows = len(table_values)
     columns = max(map(len, table_values))
     if rows > ROW_COUNT or columns > COLUMN_COUNT:
-        raise ValueError(SPREADSHEET_SIZE_ERROR_MESSAGE)
+        raise ValueError(
+            SPREADSHEET_SIZE_ERROR_MESSAGE.format(
+                rows=rows,
+                columns=columns
+            )
+        )
     update_body = {
         'majorDimension': 'ROWS',
         'values': table_values

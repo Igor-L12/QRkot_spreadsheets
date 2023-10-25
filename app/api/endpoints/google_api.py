@@ -1,6 +1,5 @@
 from aiogoogle import Aiogoogle
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_async_session
@@ -19,15 +18,15 @@ async def get_report(session: AsyncSession = Depends(get_async_session),
                      wrapper_services: Aiogoogle = Depends(get_service), ):
     """Только для суперюзеров."""
     projects = await charity_project_crud.get_closed_projects(session)
-    try:
-        spreadsheet_id, spreadsheet_url = await spreadsheets_create(
+    spreadsheet_id, spreadsheet_url = await spreadsheets_create(
             wrapper_services
         )
-        await set_user_permissions(spreadsheet_id, wrapper_services)
+    await set_user_permissions(spreadsheet_id, wrapper_services)
+    try:
         await spreadsheets_update_value(spreadsheet_id,
                                         projects,
                                         wrapper_services)
-    except ValidationError as error:
+    except ValueError as error:
         raise HTTPException(status_code=404,
                             detail=str(error))
     return spreadsheet_url
