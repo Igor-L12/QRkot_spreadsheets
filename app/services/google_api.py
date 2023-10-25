@@ -41,7 +41,7 @@ SPREADSHEET_SIZE_ERROR_MESSAGE = (
 
 
 async def spreadsheets_create(wrapper_services: Aiogoogle,
-                              spreadsheet_body = None
+                              spreadsheet_body=None
                               ) -> str:
     """Функция создания документа с таблицами."""
     now_date_time = dt.now().strftime(FORMAT)
@@ -56,7 +56,7 @@ async def spreadsheets_create(wrapper_services: Aiogoogle,
     return spreadsheet_id, spreadsheet_url
 
 
-async def set_user_permissions(spreadsheetid: str,
+async def set_user_permissions(spreadsheet_id: str,
                                wrapper_services: Aiogoogle) -> None:
     """Функция для предоставления прав доступа вашему личному аккаунту
     к созданному документу."""
@@ -66,26 +66,26 @@ async def set_user_permissions(spreadsheetid: str,
     service = await wrapper_services.discover('drive', 'v3')
     await wrapper_services.as_service_account(
         service.permissions.create(
-            fileId=spreadsheetid,
+            fileId=spreadsheet_id,
             json=permissions_body,
             fields="id"))
 
 
 async def spreadsheets_update_value(
-        spreadsheet_id: str, 
-        projects: list, 
+        spreadsheet_id: str,
+        projects: list,
         wrapper_services: Aiogoogle
 ) -> None:
     """Функция для записи данных, полученных из базы, в гугл-таблицу."""
     now_date_time = dt.now().strftime(FORMAT)
     header = TABLE_HEADER.copy()
-    header[0][1] = f'{now_date_time}' 
+    header[0][1] = f'{now_date_time}'
     service = await wrapper_services.discover('sheets', 'v4')
-    sorted_projects = sorted((({ 
-                'name': project.name, 
-                'time_collected': project.close_date - project.create_date, 
-                'description': project.description, 
-            }) for project in projects), key=itemgetter('time_collected'))
+    sorted_projects = sorted((({
+        'name': project.name,
+        'time_collected': project.close_date - project.create_date,
+        'description': project.description,
+    }) for project in projects), key=itemgetter('time_collected'))
     table_values = header + [
         [project['name'], str(project['time_collected']), project['description']]
         for project in sorted_projects
