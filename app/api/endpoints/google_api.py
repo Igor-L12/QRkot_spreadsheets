@@ -19,8 +19,8 @@ async def get_report(session: AsyncSession = Depends(get_async_session),
     """Только для суперюзеров."""
     projects = await charity_project_crud.get_closed_projects(session)
     spreadsheet_id, spreadsheet_url = await spreadsheets_create(
-            wrapper_services
-        )
+        wrapper_services
+    )
     await set_user_permissions(spreadsheet_id, wrapper_services)
     try:
         await spreadsheets_update_value(spreadsheet_id,
